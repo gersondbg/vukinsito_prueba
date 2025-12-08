@@ -1,0 +1,49 @@
+name: Build and Deploy
+
+on:
+  push:
+    branches:
+      - main # Se ejecuta cada vez que subes código a la rama 'main'
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  cancel-in-progress: false
+  group: ${{ github.workflow }}-${{ github.ref }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Configuración de Node y dependencias
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20' # Asegúrate de que esta versión funcione para tu proyecto
+
+      - name: Install dependencies and Build
+        run: |
+          npm install
+          npm run build # ESTO CREA LA CARPETA 'build'
+
+      # Despliegue a GitHub Pages
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+        with:
+          static_site_generator: custom
+          enable_html_check: false
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: 'build' # <--- ¡IMPORTANTE! Sube el contenido de la carpeta 'build'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
